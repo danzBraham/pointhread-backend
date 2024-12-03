@@ -3,21 +3,28 @@
   "version": "1.0.50",
   "scripts": {
     "dev": "bun run --watch src/index.ts",
-    "lint": "bun eslint .",
+    "lint": "bun eslint --fix src/**/*.ts",
     "prepare": "husky"
   },
   "dependencies": {
-    "elysia": "latest"
+    "@elysiajs/cors": "^1.1.1",
+    "@elysiajs/swagger": "^1.1.6",
+    "elysia": "latest",
+    "inversify": "^6.1.4",
+    "reflect-metadata": "^0.2.2"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.6.0",
     "@commitlint/config-conventional": "^19.6.0",
     "@eslint/js": "^9.15.0",
+    "@prisma/client": "^5.22.0",
     "bun-types": "latest",
     "eslint": "^9.15.0",
+    "eslint-plugin-simple-import-sort": "^12.1.1",
     "husky": "^9.1.7",
+    "prisma": "^5.22.0",
     "typescript": "^5.7.2",
     "typescript-eslint": "^8.16.0"
   },
-  "module": "src/index.js"
+  "module": "src/index.ts"
 }
