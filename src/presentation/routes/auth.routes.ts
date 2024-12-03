@@ -45,4 +45,11 @@ export const authRoutes = new Elysia({ prefix: "/auth", tags: ["auth"] })
         { additionalProperties: false, maxProperties: 3 }
       ),
     }
-  );
+  )
+  .post("/logout", async ({ cookie: { session } }) => {
+    await authService.logout(session.value);
+    return {
+      success: true,
+      message: "User logged out successfully",
+    };
+  });

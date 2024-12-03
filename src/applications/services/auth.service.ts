@@ -68,7 +68,8 @@ export class AuthService {
     };
   }
 
-  public async logout(sessionId: string) {
+  public async logout(sessionId: string | undefined) {
+    if (!sessionId) throw new SessionNotFoundError();
     const session = await this.sessionRepo.delete(sessionId);
     if (!session) throw new SessionNotFoundError();
     return session;
