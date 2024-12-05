@@ -12,14 +12,8 @@ export class UserNotFoundError extends UserError {
   }
 }
 
-export class DuplicateUserError extends UserError {
+export class UserDuplicateError extends UserError {
   constructor() {
     super("User already exists", 409);
-  }
-}
-
-export class UserValidationError extends UserError {
-  constructor(message: string) {
-    super(message, 400);
   }
 }

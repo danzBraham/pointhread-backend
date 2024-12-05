@@ -3,9 +3,9 @@ import "reflect-metadata";
 import { inject, injectable } from "inversify";
 
 import {
-  DuplicateUserError,
   InvalidCredentialsError,
   SessionNotFoundError,
+  UserDuplicateError,
   UserNotFoundError,
 } from "@/errors";
 import { LoginUser, RegisterUser } from "@/infrastructure/interfaces/user.interface";
@@ -28,7 +28,7 @@ export class AuthService {
 
   public async register({ username, email, password }: RegisterUser) {
     const user = await this.userRepo.getByEmail(email);
-    if (user) throw new DuplicateUserError();
+    if (user) throw new UserDuplicateError();
 
     if (!password) throw new InvalidCredentialsError();
     const hashedPassword = await Bun.password.hash(password, "argon2id");
