@@ -8,7 +8,7 @@ import {
   UserDuplicateError,
   UserNotFoundError,
 } from "@/errors";
-import { LoginUser, RegisterUser } from "@/infrastructure/interfaces/user.interface";
+import { LoginRequest,RegisterRequest } from "@/infrastructure/interfaces/user.interface";
 import { SessionRepository } from "@/infrastructure/repositories/session.repository";
 import { UserRepository } from "@/infrastructure/repositories/user.repository";
 import { TYPES } from "@/infrastructure/types";
@@ -26,7 +26,7 @@ export class AuthService {
     this.sessionRepo = sessionRepo;
   }
 
-  public async register({ username, email, password }: RegisterUser) {
+  public async register({ username, email, password }: RegisterRequest) {
     const user = await this.userRepo.getByEmail(email);
     if (user) throw new UserDuplicateError();
 
@@ -50,11 +50,11 @@ export class AuthService {
     };
   }
 
-  public async login({ email, password }: LoginUser) {
+  public async login({ email, password }: LoginRequest) {
     const user = await this.userRepo.getByEmail(email);
     if (!user) throw new UserNotFoundError();
 
-    if (!user.password) throw new InvalidCredentialsError();
+    if (!password || !user.password) throw new InvalidCredentialsError();
     const isPasswordValid = await Bun.password.verify(password, user.password, "argon2id");
     if (!isPasswordValid) throw new InvalidCredentialsError();
 

@@ -15,15 +15,15 @@ export class SessionRepository implements ISession {
   }
 
   public async getById(id: string): Promise<Session | null> {
-    return await this.prisma.session.findUnique({ where: { id } });
+    return this.prisma.session.findUnique({ where: { id } });
   }
 
-  public async create(user: Pick<User, "id" | "username">): Promise<Session> {
-    return await this.prisma.session.create({
+  public async create(data: Pick<User, "id">): Promise<Session> {
+    return this.prisma.session.create({
       data: {
         user: {
           connect: {
-            id: user.id,
+            id: data.id,
           },
         },
       },
@@ -31,6 +31,6 @@ export class SessionRepository implements ISession {
   }
 
   public async delete(id: string): Promise<Session | null> {
-    return await this.prisma.session.delete({ where: { id } });
+    return this.prisma.session.delete({ where: { id } });
   }
 }
