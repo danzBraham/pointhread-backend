@@ -2,8 +2,9 @@ import { cors } from "@elysiajs/cors";
 import { swagger } from "@elysiajs/swagger";
 import { Elysia } from "elysia";
 
-import { BaseError } from "./errors";
+import { errorMiddleware } from "./presentation/middleware/error.middleware";
 import { authRoutes } from "./presentation/routes/auth.routes";
+import { collectionRoutes } from "./presentation/routes/collection.routes";
 
 const config = {
   host: process.env.HOST ?? "localhost",
@@ -27,29 +28,12 @@ const app = new Elysia()
     })
   )
 
-  // Errors
-  .onError(({ code, error, set }) => {
-    if (error instanceof BaseError) {
-      set.status = error.code;
-      return { success: false, error: error.name, message: error.message };
-    }
-
-    if (code === "VALIDATION") {
-      set.status = error.status;
-      return {
-        success: false,
-        error: "ValidationError",
-        message: `${error.message}: ${error.all[0].summary ?? "Unknown error"}`,
-      };
-    }
-
-    set.status = 500;
-    return { success: false, error: error.name, message: error.message };
-  })
+  // Middleware
+  .use(errorMiddleware)
 
   // Routes
   .get("/", () => ({ message: "Hello Pointhread!" }))
-  .group("/api/v1", (app) => app.use(authRoutes))
+  .group("/api/v1", (app) => app.use(authRoutes).use(collectionRoutes))
 
   // Port
   .listen(config.port);
