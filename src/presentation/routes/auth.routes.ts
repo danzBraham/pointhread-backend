@@ -20,7 +20,7 @@ export const authRoutes = new Elysia({ prefix: "/auth", tags: ["auth"] })
         {
           username: t.String({ minLength: 1, maxLength: 50, error: "Invalid username" }),
           email: t.String({ format: "email", error: "Invalid email" }),
-          password: t.String({ minLength: 6, maxLength: 16, error: "Invalid password" }),
+          password: t.String({ minLength: 8, error: "Invalid password" }),
         },
         { additionalProperties: false, maxProperties: 3 }
       ),
@@ -40,7 +40,7 @@ export const authRoutes = new Elysia({ prefix: "/auth", tags: ["auth"] })
       body: t.Object(
         {
           email: t.String({ format: "email", error: "Invalid email" }),
-          password: t.String({ minLength: 6, maxLength: 16, error: "Invalid password" }),
+          password: t.String({ minLength: 8, error: "Invalid password" }),
         },
         { additionalProperties: false, maxProperties: 3 }
       ),
@@ -51,5 +51,12 @@ export const authRoutes = new Elysia({ prefix: "/auth", tags: ["auth"] })
     return {
       success: true,
       message: "User logged out successfully",
+    };
+  })
+  .get("/verify", async ({ cookie: { session } }) => {
+    const user = await authService.getSession(session.value);
+    return {
+      success: true,
+      data: user,
     };
   });

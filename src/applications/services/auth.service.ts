@@ -8,7 +8,7 @@ import {
   UserDuplicateError,
   UserNotFoundError,
 } from "@/errors";
-import { LoginRequest,RegisterRequest } from "@/infrastructure/interfaces/user.interface";
+import { LoginRequest, RegisterRequest } from "@/infrastructure/interfaces/user.interface";
 import { SessionRepository } from "@/infrastructure/repositories/session.repository";
 import { UserRepository } from "@/infrastructure/repositories/user.repository";
 import { TYPES } from "@/infrastructure/types";
@@ -75,7 +75,8 @@ export class AuthService {
     return session;
   }
 
-  public async getSession(sessionId: string) {
+  public async getSession(sessionId: string | undefined) {
+    if (!sessionId) throw new SessionNotFoundError();
     const session = await this.sessionRepo.getById(sessionId);
     if (!session) throw new SessionNotFoundError();
     return session;
