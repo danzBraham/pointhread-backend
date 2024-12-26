@@ -11,7 +11,6 @@ export const authRoutes = new Elysia({ prefix: "/auth", tags: ["auth"] })
       const registeredUser = await authService.register(body);
       return {
         success: true,
-        message: "User registered successfully",
         data: registeredUser,
       };
     },
@@ -32,7 +31,6 @@ export const authRoutes = new Elysia({ prefix: "/auth", tags: ["auth"] })
       const loggedInUser = await authService.login(body);
       return {
         success: true,
-        message: "User logged in successfully",
         data: loggedInUser,
       };
     },
@@ -46,17 +44,25 @@ export const authRoutes = new Elysia({ prefix: "/auth", tags: ["auth"] })
       ),
     }
   )
-  .post("/logout", async ({ cookie: { session } }) => {
-    await authService.logout(session.value);
+  .post("/logout", async ({ headers }) => {
+    const session = headers.authorization?.split(" ")[1];
+    await authService.logout(session);
     return {
       success: true,
       message: "User logged out successfully",
     };
   })
-  .get("/verify", async ({ cookie: { session } }) => {
-    const user = await authService.getSession(session.value);
-    return {
-      success: true,
-      data: user,
-    };
-  });
+  .post(
+    "/session",
+    async ({ body }) => {
+      await authService.verifySession(body.sessionId);
+      return {
+        success: true,
+      };
+    },
+    {
+      body: t.Object({
+        sessionId: t.String(),
+      }),
+    }
+  );

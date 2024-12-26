@@ -2,9 +2,7 @@ import { cors } from "@elysiajs/cors";
 import { swagger } from "@elysiajs/swagger";
 import { Elysia } from "elysia";
 
-import { errorMiddleware } from "./presentation/middleware/error.middleware";
 import { authRoutes } from "./presentation/routes/auth.routes";
-import { collectionRoutes } from "./presentation/routes/collection.routes";
 
 const config = {
   host: process.env.HOST ?? "localhost",
@@ -28,12 +26,46 @@ const app = new Elysia()
     })
   )
 
-  // Middleware
-  .use(errorMiddleware)
+  // Errors
+  .onError(({ code, error, set }) => {
+    if (code === "VALIDATION") {
+      set.status = 400;
+      return {
+        success: false,
+        error: "ValidationError",
+        message: error.message,
+        details: error.all[0]?.summary ?? "Unknown validation error",
+      };
+    }
+
+    if (code === "NOT_FOUND") {
+      set.status = 404;
+      return {
+        success: false,
+        error: "NotFoundError",
+        message: "Resource not found",
+      };
+    }
+
+    if (code === "PARSE") {
+      set.status = 400;
+      return {
+        success: false,
+        error: "ParseError",
+        message: "Invalid request format",
+      };
+    }
+
+    return {
+      success: false,
+      error: error.name,
+      message: error.message,
+    };
+  })
 
   // Routes
   .get("/", () => ({ message: "Hello Pointhread!" }))
-  .group("/api/v1", (app) => app.use(authRoutes).use(collectionRoutes))
+  .group("/api/v1", (app) => app.use(authRoutes))
 
   // Port
   .listen(config.port);

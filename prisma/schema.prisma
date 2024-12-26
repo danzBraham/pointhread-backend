@@ -52,6 +52,7 @@ model Session {
 model Collection {
   id        String   @id @default(cuid()) @db.VarChar(25)
   name      String   @db.VarChar(50)
+  slug      String   @db.VarChar(50)
   userId    String   @map("user_id")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -65,17 +66,18 @@ model Collection {
 
 // SummarizedThread model for storing thread content and summaries
 model SummarizedThread {
-  id                 String      @id @default(cuid()) @db.VarChar(25)
-  originalContent    String      @map("original_content") @db.Text
-  summarizedContent  String      @map("summarized_content") @db.Text
-  originalThreadLink String      @map("original_thread_link") @db.VarChar(2048)
-  summaryType        SummaryType @map("summary_type")
-  userId             String      @map("user_id")
-  collectionId       String?     @map("collection_id")
-  isDeleted          Boolean     @default(false) @map("is_deleted")
-  deletedAt          DateTime?   @map("deleted_at")
-  createdAt          DateTime    @default(now()) @map("created_at")
-  updatedAt          DateTime    @updatedAt @map("updated_at")
+  id                String      @id @default(cuid()) @db.VarChar(25)
+  originalContent   String      @map("original_content") @db.Text
+  summarizedContent String      @map("summarized_content") @db.Text
+  threadStarterLink String      @map("thread_starter_link") @db.VarChar(2048)
+  threadEndLink     String      @map("thread_end_link") @db.VarChar(2048)
+  summaryType       SummaryType @map("summary_type")
+  userId            String      @map("user_id")
+  collectionId      String?     @map("collection_id")
+  isDeleted         Boolean     @default(false) @map("is_deleted")
+  deletedAt         DateTime?   @map("deleted_at")
+  createdAt         DateTime    @default(now()) @map("created_at")
+  updatedAt         DateTime    @updatedAt @map("updated_at")
 
   // Relations
   user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)

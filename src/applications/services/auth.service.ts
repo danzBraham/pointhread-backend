@@ -2,16 +2,18 @@ import "reflect-metadata";
 
 import { inject, injectable } from "inversify";
 
+import { LoginRequest, RegisterRequest } from "@/infrastructure/entities/user.entity";
 import {
-  InvalidCredentialsError,
-  SessionNotFoundError,
-  UserDuplicateError,
-  UserNotFoundError,
-} from "@/errors";
-import { LoginRequest, RegisterRequest } from "@/infrastructure/interfaces/user.interface";
+  AuthorizationError,
+  BadRequestError,
+  DuplicateError,
+  NotFoundError,
+} from "@/infrastructure/errors";
 import { SessionRepository } from "@/infrastructure/repositories/session.repository";
 import { UserRepository } from "@/infrastructure/repositories/user.repository";
 import { TYPES } from "@/infrastructure/types";
+
+import { authDTO } from "../dtos/auth.dto";
 
 @injectable()
 export class AuthService {
@@ -27,10 +29,11 @@ export class AuthService {
   }
 
   public async register({ username, email, password }: RegisterRequest) {
-    const user = await this.userRepo.getByEmail(email);
-    if (user) throw new UserDuplicateError();
+    const user = await this.userRepo.getOneByEmail(email);
+    if (user) {
+      throw new DuplicateError("User already exists");
+    }
 
-    if (!password) throw new InvalidCredentialsError();
     const hashedPassword = await Bun.password.hash(password, "argon2id");
 
     const newUser = await this.userRepo.create({
@@ -40,45 +43,56 @@ export class AuthService {
       avatarUrl: "",
       authProvider: "EMAIL",
     });
-    const token = await this.sessionRepo.create(newUser);
 
-    return {
-      id: newUser.id,
-      username: newUser.username,
-      email: newUser.email,
-      accessToken: token.id,
-    };
+    return authDTO.forRegister(newUser);
   }
 
   public async login({ email, password }: LoginRequest) {
-    const user = await this.userRepo.getByEmail(email);
-    if (!user) throw new UserNotFoundError();
+    const user = await this.userRepo.getOneByEmail(email);
+    if (!user) {
+      throw new NotFoundError("User not found");
+    }
+    if (!user.password) {
+      throw new BadRequestError("Invalid credentials");
+    }
 
-    if (!password || !user.password) throw new InvalidCredentialsError();
     const isPasswordValid = await Bun.password.verify(password, user.password, "argon2id");
-    if (!isPasswordValid) throw new InvalidCredentialsError();
+    if (!isPasswordValid) {
+      throw new BadRequestError("Invalid credentials");
+    }
 
-    const token = await this.sessionRepo.create(user);
+    const token = await this.sessionRepo.create(user.id);
 
-    return {
-      id: user.id,
-      username: user.username,
-      email: user.email,
-      accessToken: token.id,
-    };
+    return authDTO.forLogin(user, token);
   }
 
   public async logout(sessionId: string | undefined) {
-    if (!sessionId) throw new SessionNotFoundError();
-    const session = await this.sessionRepo.delete(sessionId);
-    if (!session) throw new SessionNotFoundError();
-    return session;
+    console.log({ sessionId });
+    if (!sessionId) {
+      throw new AuthorizationError("Session not provided");
+    }
+    await this.sessionRepo.delete(sessionId);
   }
 
-  public async getSession(sessionId: string | undefined) {
-    if (!sessionId) throw new SessionNotFoundError();
-    const session = await this.sessionRepo.getById(sessionId);
-    if (!session) throw new SessionNotFoundError();
-    return session;
+  public async verifySession(sessionId: string) {
+    const session = await this.sessionRepo.getOne(sessionId);
+    if (!session) {
+      throw new AuthorizationError("Invalid session");
+    }
+    return "valid";
+  }
+
+  public async decodeSession(sessionId: string) {
+    const session = await this.sessionRepo.getOne(sessionId);
+    if (!session) {
+      throw new AuthorizationError("Invalid session");
+    }
+
+    const user = await this.userRepo.getOne(session.userId);
+    if (!user) {
+      throw new AuthorizationError("Invalid session");
+    }
+
+    return { user };
   }
 }
