@@ -67,10 +67,15 @@ export class AuthService {
   }
 
   public async logout(sessionId: string | undefined) {
-    console.log({ sessionId });
     if (!sessionId) {
       throw new AuthorizationError("Session not provided");
     }
+
+    const session = await this.sessionRepo.getOne(sessionId);
+    if (!session) {
+      throw new NotFoundError("Session not found");
+    }
+
     await this.sessionRepo.delete(sessionId);
   }
 

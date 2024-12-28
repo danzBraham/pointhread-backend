@@ -3,6 +3,7 @@ import { swagger } from "@elysiajs/swagger";
 import { Elysia } from "elysia";
 
 import { authRoutes } from "./presentation/routes/auth.routes";
+import { collectionRoutes } from "./presentation/routes/collection.routes";
 
 const config = {
   host: process.env.HOST ?? "localhost",
@@ -64,8 +65,7 @@ const app = new Elysia()
   })
 
   // Routes
-  .get("/", () => ({ message: "Hello Pointhread!" }))
-  .group("/api/v1", (app) => app.use(authRoutes))
+  .group("/api/v1", (app) => app.use(authRoutes).use(collectionRoutes))
 
   // Port
   .listen(config.port);
