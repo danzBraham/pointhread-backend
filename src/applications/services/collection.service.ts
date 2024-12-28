@@ -12,6 +12,8 @@ import { CollectionRepository } from "@/infrastructure/repositories/collection.r
 import { TYPES } from "@/infrastructure/types";
 import { generateSlug } from "@/infrastructure/utils/slug";
 
+import { collectionDTO } from "../dtos/collection.dto";
+
 @injectable()
 export class CollectionService {
   private collectionRepo: CollectionRepository;
@@ -21,11 +23,17 @@ export class CollectionService {
   }
 
   public async getAll(userId: string) {
-    return this.collectionRepo.getAll(userId);
+    const collections = await this.collectionRepo.getAll(userId);
+    return collections.map((collection) => collectionDTO.forResponse(collection));
   }
 
   public async getOne(id: string, userId: string) {
-    return this.collectionRepo.getOne(id, userId);
+    const collection = await this.collectionRepo.getOne(id, userId);
+    if (!collection) {
+      throw new NotFoundError("Collection not found");
+    }
+
+    return collectionDTO.forResponse(collection);
   }
 
   public async create(userId: string, data: CollectionCreateRequest) {
@@ -35,8 +43,9 @@ export class CollectionService {
     }
 
     const slug = generateSlug(data.name);
+    const newCollection = await this.collectionRepo.create({ name: data.name, slug, userId });
 
-    return this.collectionRepo.create({ name: data.name, slug, userId });
+    return collectionDTO.forResponse(newCollection);
   }
 
   public async update(id: string, userId: string, data: CollectionUpdateRequest) {
@@ -44,9 +53,11 @@ export class CollectionService {
     if (collection) {
       throw new DuplicateError("Collection already exists");
     }
-    const slug = generateSlug(data.name);
 
-    return this.collectionRepo.update(id, userId, { ...data, slug });
+    const slug = generateSlug(data.name);
+    const updatedCollection = await this.collectionRepo.update(id, userId, { ...data, slug });
+
+    return collectionDTO.forResponse(updatedCollection);
   }
 
   public async delete(id: string, userId: string) {
