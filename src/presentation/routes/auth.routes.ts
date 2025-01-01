@@ -52,17 +52,10 @@ export const authRoutes = new Elysia({ prefix: "/auth", tags: ["auth"] })
       message: "User logged out successfully",
     };
   })
-  .post(
-    "/session",
-    async ({ body }) => {
-      await authService.verifySession(body.sessionId);
-      return {
-        success: true,
-      };
-    },
-    {
-      body: t.Object({
-        sessionId: t.String(),
-      }),
-    }
-  );
+  .post("/verify", async ({ headers }) => {
+    const session = headers.authorization?.split(" ")[1];
+    await authService.verifySession(session);
+    return {
+      success: true,
+    };
+  });

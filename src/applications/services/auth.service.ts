@@ -44,7 +44,9 @@ export class AuthService {
       authProvider: "EMAIL",
     });
 
-    return authDTO.forRegister(newUser);
+    const token = await this.sessionRepo.create(newUser.id);
+
+    return authDTO.forResponse(newUser, token);
   }
 
   public async login({ email, password }: LoginRequest) {
@@ -63,7 +65,7 @@ export class AuthService {
 
     const token = await this.sessionRepo.create(user.id);
 
-    return authDTO.forLogin(user, token);
+    return authDTO.forResponse(user, token);
   }
 
   public async logout(sessionId: string | undefined) {
@@ -79,15 +81,24 @@ export class AuthService {
     await this.sessionRepo.delete(sessionId);
   }
 
-  public async verifySession(sessionId: string) {
+  public async verifySession(sessionId: string | undefined) {
+    if (!sessionId) {
+      throw new AuthorizationError("Session not provided");
+    }
+
     const session = await this.sessionRepo.getOne(sessionId);
     if (!session) {
       throw new AuthorizationError("Invalid session");
     }
+
     return "valid";
   }
 
-  public async decodeSession(sessionId: string) {
+  public async decodeSession(sessionId: string | undefined) {
+    if (!sessionId) {
+      throw new AuthorizationError("Session not provided");
+    }
+
     const session = await this.sessionRepo.getOne(sessionId);
     if (!session) {
       throw new AuthorizationError("Invalid session");
